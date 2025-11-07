@@ -1,0 +1,12 @@
+[Unit]
+Description=Flask Container App
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker run --rm -p 80:5000 --name ci-cd-app ${DOCKER_IMAGE}
+ExecStop=/usr/bin/docker stop ci-cd-app
+
+[Install]
+WantedBy=multi-user.target
