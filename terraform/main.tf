@@ -5,6 +5,9 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source = "hashicorp/random"
+    }
   }
 }
 
@@ -12,10 +15,21 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource "random_id" "suffix" {
+  byte_length = 2
+}
+
 resource "aws_security_group" "web_sg" {
-  name        = "${var.project_name}-sg"
-  description = "Allow HTTP and SSH"
+  name        = "ci-cd-python-aws-sg-${random_id.suffix.hex}"
+  description = "Allow SSH and HTTP access"
   vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   ingress {
     from_port   = 80
@@ -24,20 +38,20 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.allow_ssh_cidr]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name        = "ci-cd-python-aws-sg"
+    Environment = "Development"
+    ManagedBy   = "Terraform"
+  }
 }
+
 
 data "aws_vpc" "default" {
   default = true
