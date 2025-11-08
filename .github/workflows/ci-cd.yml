@@ -77,7 +77,7 @@ jobs:
           terraform -version     
 
       - name: Terraform Init/Plan/Apply
-        working-directory: ./CI-CD-Pipeline-for-Python-Apps/terraform
+        working-directory: ./terraform
         run: |
           terraform init -input=false
           terraform plan -out=tfplan -input=false -var="aws_region=${AWS_REGION}" -var="ssh_key_name=<your-keypair>"
