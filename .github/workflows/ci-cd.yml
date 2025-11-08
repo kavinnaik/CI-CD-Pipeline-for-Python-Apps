@@ -65,6 +65,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Install Terraform
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y wget unzip
+          wget https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip
+          unzip terraform_1.6.6_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+          terraform -version     
+
       - name: Terraform Init/Plan/Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
