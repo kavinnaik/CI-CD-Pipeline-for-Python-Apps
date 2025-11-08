@@ -55,10 +55,10 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS creds
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -70,24 +70,21 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y wget unzip
           wget -q https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip
-          # Clean up any previous terraform folders or binaries
-          sudo rm -rf terraform
           unzip -o terraform_1.6.6_linux_amd64.zip
           sudo mv terraform /usr/local/bin/
-          terraform -version     
+          terraform -version
 
       - name: Terraform Init/Plan/Apply
         working-directory: ./terraform
         run: |
           terraform init -input=false
-          terraform plan -out=tfplan -input=false -var="aws_region=${AWS_REGION}" -var="ssh_key_name=<your-keypair>"
+          terraform plan -out=tfplan -input=false -var="aws_region=${AWS_REGION}" -var="ssh_key_name=${{ secrets.SSH_KEY_NAME }}"
           terraform apply -input=false -auto-approve tfplan
 
       - name: Output EC2 host
         id: tfout
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          echo "HOST=$(terraform output -raw ec2_public_dns)" >> $GITHUB_OUTPUT
+        working-directory: ./terraform
+        run: echo "HOST=$(terraform output -raw ec2_public_dns)" >> $GITHUB_OUTPUT
 
       - name: Set EC2 HOST env
         run: echo "EC2_HOST=${{ steps.tfout.outputs.HOST }}" >> $GITHUB_ENV
@@ -100,5 +97,5 @@ jobs:
       - name: Deploy via SSH
         env:
           IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-        run: |
-          ./deploy/deploy_via_ssh.sh "$EC2_HOST" "${{ secrets.EC2_USER }}" "key.pem" "$IMAGE"
+        run: ./deploy/deploy_via_ssh.sh "$EC2_HOST" "${{ secrets.EC2_USER }}" "key.pem" "$IMAGE"
+
