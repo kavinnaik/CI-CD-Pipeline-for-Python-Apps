@@ -96,6 +96,9 @@ jobs:
 
       - name: Deploy via SSH
         env:
-          IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-        run: ./deploy/deploy_via_ssh.sh "$EC2_HOST" "${{ secrets.EC2_USER }}" "key.pem" "$IMAGE"
+         IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          chmod +x ./deploy/deploy_via_ssh.sh
+          ./deploy/deploy_via_ssh.sh "$EC2_HOST" "${{ secrets.EC2_USER }}" "key.pem" "$IMAGE"
+
 
