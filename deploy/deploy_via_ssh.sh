@@ -1,23 +1,22 @@
 #!/bin/bash
-set -e  # exit immediately on error
 
-EC2_HOST=$1
-EC2_USER=$2
-KEY_PATH=$3
+HOST=$1
+USER=$2
+KEY=$3
 IMAGE=$4
 
-echo "🚀 Deploying image $IMAGE to $EC2_HOST"
+echo "🚀 Deploying image $IMAGE to $HOST"
 
-# Copy deployment files
-scp -i "$KEY_PATH" -o StrictHostKeyChecking=no docker-compose.yml $EC2_USER@$EC2_HOST:/home/$EC2_USER/ || echo "⚠️ No docker-compose.yml found"
+# Upload docker-compose.yml
+scp -i "$KEY" -o StrictHostKeyChecking=no deploy/docker-compose.yml $USER@$HOST:/home/$USER/docker-compose.yml || echo "⚠️ No docker-compose.yml found"
 
-# Run deployment commands remotely
-ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << EOF
-  set -e
-  echo "🔐 Connected to $EC2_HOST"
-  sudo systemctl start docker || true
+# SSH and deploy container
+ssh -i "$KEY" -o StrictHostKeyChecking=no $USER@$HOST << EOF
+  echo "📦 Pulling latest image..."
   docker pull $IMAGE
-  docker ps -q --filter "name=app" && docker stop app && docker rm app || true
-  docker run -d --name app -p 80:80 $IMAGE
-  echo "✅ Deployment successful!"
+  echo "🧹 Stopping old containers..."
+  docker rm -f ci-cd-python-app || true
+  echo "🚀 Starting new container..."
+  docker-compose -f docker-compose.yml up -d
 EOF
+
