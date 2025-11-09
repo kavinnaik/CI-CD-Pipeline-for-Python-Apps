@@ -67,12 +67,12 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Install Terraform
-        run: |
+         run: |
           sudo apt-get update -y
           sudo apt-get install -y wget unzip
-          wget -q https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip
-          unzip -o terraform_1.6.6_linux_amd64.zip
-          sudo mv terraform /usr/local/bin/
+          wget -q https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip -O /tmp/terraform.zip
+          unzip -o /tmp/terraform.zip -d /tmp
+          sudo mv /tmp/terraform /usr/local/bin/
           terraform -version
 
       - name: Terraform Init, Plan and Apply
