@@ -1,9 +1,9 @@
-version: '3'
+version: "3.8"
 services:
   app:
     image: ${IMAGE}
     container_name: ci-cd-python-app
+    restart: always
     ports:
       - "5000:5000"
-    restart: always
 
