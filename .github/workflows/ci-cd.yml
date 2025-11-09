@@ -93,7 +93,8 @@ jobs:
     needs: terraform_apply
     runs-on: ubuntu-latest
     env:
-      IMAGE: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+      # Build image ref directly without referencing workflow-level env in an expression
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-hello:${{ github.sha }}
       EC2_HOST: ${{ needs.terraform_apply.outputs.ec2_host }}
     steps:
       - name: Checkout
@@ -107,7 +108,10 @@ jobs:
       - name: Debug EC2 host
         run: echo "Deploying to $EC2_HOST ..."
 
+      - name: Ensure deploy script is executable
+        run: chmod +x deploy/deploy_via_ssh.sh
+
       - name: Deploy via SSH
         run: |
           ./deploy/deploy_via_ssh.sh "$EC2_HOST" "${{ secrets.EC2_USER }}" "key.pem" "$IMAGE"
-  
+
