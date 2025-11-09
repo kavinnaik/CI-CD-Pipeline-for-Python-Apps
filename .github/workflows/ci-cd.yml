@@ -79,7 +79,7 @@ jobs:
         working-directory: ./terraform
         run: |
           terraform init -input=false
-          terraform plan -out=tfplan -input=false
+          terraform plan -out=tfplan -input=false -var="aws_region=${AWS_REGION}"
           terraform apply -auto-approve tfplan
 
       - name: Get EC2 public DNS
