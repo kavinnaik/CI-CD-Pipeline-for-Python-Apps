@@ -73,24 +73,48 @@ data "aws_ami" "linux" {
   }
 }
 
+data "aws_instances" "existing" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.project_name}-ec2"]
+  }
+}
+
+locals {
+  existing_instance_id = try(data.aws_instances.existing.ids[0], "")
+}
+
+
 resource "aws_instance" "web" {
+  count = local.existing_instance_id == "" ? 1 : 0
+
   ami                         = data.aws_ami.linux.id
   instance_type               = var.instance_type
   key_name                    = var.ssh_key_name
   subnet_id                   = data.aws_subnets.default.ids[0]
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
-
-  user_data = file("${path.module}/user_data.sh")
+  user_data                   = file("${path.module}/user_data.sh")
 
   tags = {
-    Name = "${var.project_name}-ec2"
+    Name        = "${var.project_name}-ec2"
+    Environment = "Development"
+  }
+
+  lifecycle {
+    prevent_destroy = false
+    create_before_destroy = false
   }
 }
 
 output "ec2_public_ip" {
-  value = aws_instance.web.public_ip
+  value       = length(aws_instance.web) > 0 ? aws_instance.web[0].public_ip : ""
+  description = "Public IP of the EC2 instance"
 }
+
 output "ec2_public_dns" {
-  value = aws_instance.web.public_dns
+  value       = length(aws_instance.web) > 0 ? aws_instance.web[0].public_dns : ""
+  description = "Public DNS of the EC2 instance"
 }
+
+
