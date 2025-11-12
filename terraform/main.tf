@@ -107,12 +107,12 @@ resource "aws_instance" "web" {
 }
 
 output "ec2_public_ip" {
-  value       = length(aws_instance.web) > 0 ? aws_instance.web[0].public_ip : ""
+  value       = try(aws_instance.web.public_ip, "")
   description = "Public IP of the EC2 instance"
 }
 
 output "ec2_public_dns" {
-  value       = length(aws_instance.web) > 0 ? aws_instance.web[0].public_dns : ""
+  value       = try(aws_instance.web.public_dns, "")
   description = "Public DNS of the EC2 instance"
 }
 
