@@ -86,7 +86,6 @@ locals {
 
 
 resource "aws_instance" "web" {
-  count = local.existing_instance_id == "" ? 1 : 0
 
   ami                         = data.aws_ami.linux.id
   instance_type               = var.instance_type
