@@ -24,16 +24,36 @@ fi
 ssh -o StrictHostKeyChecking=no -i "$KEY_PATH" "$EC2_USER@$EC2_HOST" <<EOF
   echo "✅ Connected to EC2 host: $EC2_HOST"
 
+  # Ensure Docker is installed
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "🐳 Docker not found. Installing..."
+    sudo dnf update -y
+    sudo dnf install -y docker
+    sudo systemctl enable docker
+    sudo systemctl start docker
+  fi
+
+  # Ensure docker service is running
+  sudo systemctl status docker || sudo systemctl start docker
+
+  # Ensure docker-compose is available (standalone binary for compatibility)
+  if ! command -v docker-compose >/dev/null 2>&1; then
+    echo "🧩 docker-compose not found. Installing standalone binary..."
+    sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+  fi
+
   # Stop any existing containers
-  docker compose -f docker-compose.yml down || true
+  sudo docker-compose -f docker-compose.yml down || true
 
   # Pull the latest image
-  docker pull $IMAGE
+  sudo docker pull $IMAGE
 
   # Start the new container
-  docker compose -f docker-compose.yml up -d
+  sudo docker-compose -f docker-compose.yml up -d
 
   echo "🎉 Deployment complete! Running containers:"
-  docker ps
+  sudo docker ps
 EOF
+
 
